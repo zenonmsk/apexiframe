@@ -15,6 +15,7 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh; /* Chiếm toàn bộ chiều cao viewport */
+            margin: 0;
         }
         /* Style cho thẻ <a> để trông giống nút */
         .btn {
@@ -37,44 +38,35 @@
             <!-- Header / Tiêu đề -->
             <header class="mb-6">
                 <h1 class="text-3xl font-extrabold text-indigo-700 mb-2">Khởi động Ứng dụng APEX</h1>
-                <p class="text-sm text-gray-500">Chọn phương thức mở ứng dụng trên trình duyệt gốc (Chrome/Safari).</p>
+                <p class="text-sm text-gray-500">Ứng dụng sẽ mở trong trình duyệt gốc (Chrome/Safari) với tham số trả về.</p>
             </header>
 
             <!-- NÚT KHỞI ĐỘNG ỨNG DỤNG -->
             <div class="flex flex-col gap-4 my-8">
                 
-                <!-- Nút 1: Mở trực tiếp bằng thẻ A (Không qua Custom Scheme) -->
+                <!-- Nút Mở Trực tiếp (Có đính kèm URL trả về) -->
                 <a 
                     id="direct-launch-button"
                     href="#" 
-                    target="_blank"
-                    class="btn px-8 py-3 text-base bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition duration-150 ease-in-out w-full disabled:opacity-50"
-                    title="Mở link APEX trực tiếp. Yêu cầu cấu hình WebView cho target=_blank"
+                    onclick="return launchDirectly(event)"
+                    class="btn px-8 py-4 text-lg bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition duration-150 ease-in-out w-full disabled:opacity-50"
+                    title="Mở link APEX trực tiếp và truyền URL trả về."
                 >
-                    1. Mở Trực tiếp (Direct Link)
+                    Mở Ứng dụng APEX
                 </a>
 
-                <!-- Nút 2: Mở qua Custom URL Scheme (Cầu nối Native) -->
-                <a 
-                    id="bridge-launch-button"
-                    href="#" 
-                    class="btn px-8 py-3 text-base bg-pink-600 text-white font-bold rounded-xl hover:bg-pink-700 transition duration-150 ease-in-out w-full disabled:opacity-50"
-                    title="Mở link APEX qua Custom Scheme (app-bridge://). Cần cấu hình Native App."
-                >
-                    2. Mở qua Bridge (Custom Scheme)
-                </a>
             </div>
 
             <!-- Thông báo Lỗi/Hướng dẫn -->
             <div id="status-message" class="text-sm mt-6 p-3 rounded-lg border border-gray-200 bg-gray-50 text-gray-700">
-                Vui lòng cấu hình URL APEX và chọn một nút.
+                Vui lòng cấu hình URL APEX.
             </div>
 
         </main>
         
         <!-- Footer / Chân trang -->
         <footer class="mt-4 text-center text-xs text-gray-400">
-            Sử dụng các phương thức điều hướng khác nhau.
+            Sử dụng phương thức Direct Link với tham số trả về (P_RETURN_URL).
         </footer>
 
     </div>
@@ -82,17 +74,42 @@
     <script>
         // *** RẤT QUAN TRỌNG: THAY THẾ URL DƯỚI ĐÂY BẰNG URL APEX CỦA BẠN ***
         const APEX_APP_URL_PLACEHOLDER = 'YOUR_APEX_APPLICATION_URL_HERE'; 
-        // Đặt URL APEX thực tế vào đây sau khi sao chép mã
-        const APEX_APP_URL = 'https://oracleapex.com/ords/r/ttdat/test'; 
+        // Thay thế bằng URL thực tế. Ví dụ: 'https://oracleapex.com/ords/r/ttdat/test'
+        const APEX_APP_URL_BASE = 'https://oracleapex.com/ords/r/ttdat/test'; 
 
         const DIRECT_LAUNCH_BUTTON = document.getElementById('direct-launch-button');
-        const BRIDGE_LAUNCH_BUTTON = document.getElementById('bridge-launch-button');
         const STATUS_MESSAGE = document.getElementById('status-message');
+        
+        // Hàm xử lý cho Nút Mở Trực tiếp với tham số trả về
+        function launchDirectly(event) {
+            event.preventDefault(); 
+            
+            if (APEX_APP_URL_BASE.includes(APEX_APP_URL_PLACEHOLDER)) {
+                console.error("LỖI CẤU HÌNH: URL APEX chưa được thay thế.");
+                return false; 
+            }
+            
+            // 1. Lấy URL hiện tại của trang Launcher và mã hóa
+            // Đây là URL mà APEX sẽ redirect về
+            const LAUNCHER_URL = window.location.href.split('#')[0]; // Bỏ hash fragment
+            const encodedLauncherUrl = encodeURIComponent(LAUNCHER_URL);
+
+            // 2. Xây dựng URL đầy đủ để truyền tham số P_RETURN_URL
+            // Sử dụng dấu & hoặc ? tùy thuộc vào việc URL gốc đã có tham số chưa
+            const separator = APEX_APP_URL_BASE.includes('?') ? '&' : '?';
+            const fullApexUrl = APEX_APP_URL_BASE + separator + 'P_RETURN_URL=' + encodedLauncherUrl;
+            
+            console.log("Launching URL with return parameter:", fullApexUrl);
+
+            // 3. Thực hiện điều hướng trong cùng một cửa sổ WebView
+            window.location.assign(fullApexUrl);
+            return false;
+        }
 
         document.addEventListener('DOMContentLoaded', function() {
             
-            // --- Xử lý URL và Custom Scheme ---
-            let targetUrl = APEX_APP_URL;
+            // --- Xử lý URL ---
+            let targetUrl = APEX_APP_URL_BASE;
 
             // Nếu placeholder chưa được thay thế
             if (targetUrl.includes(APEX_APP_URL_PLACEHOLDER)) {
@@ -100,19 +117,11 @@
                 STATUS_MESSAGE.classList.remove('text-gray-700', 'bg-gray-50');
                 STATUS_MESSAGE.classList.add('text-red-700', 'bg-red-100', 'border-red-400', 'font-bold');
                 
-                // Vô hiệu hóa cả hai nút
+                // Vô hiệu hóa nút
                 DIRECT_LAUNCH_BUTTON.classList.add('opacity-50', 'pointer-events-none');
-                BRIDGE_LAUNCH_BUTTON.classList.add('opacity-50', 'pointer-events-none');
             } else {
-                // Cấu hình Nút 1: Mở trực tiếp (Direct Link)
-                DIRECT_LAUNCH_BUTTON.href = targetUrl;
-
-                // Cấu hình Nút 2: Mở qua Bridge (Custom Scheme)
-                const encodedUrl = encodeURIComponent(targetUrl);
-                BRIDGE_LAUNCH_BUTTON.href = `app-bridge://open-external?url=${encodedUrl}`;
-                
                 // Cập nhật thông báo
-                STATUS_MESSAGE.innerHTML = `Sẵn sàng mở ứng dụng tại: <strong>${targetUrl}</strong>`;
+                STATUS_MESSAGE.innerHTML = `Ứng dụng sẽ mở tại: <strong>${targetUrl}</strong>`;
                 STATUS_MESSAGE.classList.remove('text-gray-700', 'bg-gray-50', 'text-red-700', 'bg-red-100', 'border-red-400');
                 STATUS_MESSAGE.classList.add('text-green-700', 'bg-green-100', 'border-green-400');
             }
