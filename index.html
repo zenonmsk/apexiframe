@@ -14,12 +14,14 @@
         }
         /* Đảm bảo iframe chiếm toàn bộ không gian có thể */
         #apex-iframe-container {
-            height: calc(100vh - 6rem); /* Chiều cao trừ đi header, margin và button bar */
+            /* Chiều cao trừ đi header, margin và button bar (3.5rem) */
+            height: calc(100vh - 6rem - 3.5rem); 
             min-height: 400px;
         }
         @media (max-width: 768px) {
             #apex-iframe-container {
-                height: calc(100vh - 4rem - 3.5rem); /* Header và button bar nhỏ hơn trên mobile */
+                /* Header và button bar nhỏ hơn trên mobile */
+                height: calc(100vh - 4rem - 3.5rem); 
             }
         }
     </style>
@@ -43,16 +45,27 @@
                     Đang tải ứng dụng Oracle APEX...
                 </div>
 
-                <!-- NÚT MỞ LINK TRÊN TRÌNH DUYỆT GỐC -->
-                <button 
-                    id="open-browser-button"
-                    onclick="openExternalLink('https://www.google.com/search?q=Oracle+APEX')"
-                    class="px-4 py-2 bg-pink-500 text-white font-semibold rounded-lg shadow-md hover:bg-pink-600 transition duration-150 ease-in-out text-sm w-full sm:w-auto disabled:opacity-50"
-                    title="Mở link trên trình duyệt ngoài (Safari/Chrome)"
-                    disabled
-                >
-                    Mở Link Ngoài
-                </button>
+                <div class="flex flex-row gap-3 w-full sm:w-auto">
+                    <!-- NÚT QUAY LẠI TRANG TRƯỚC (Cục bộ) -->
+                    <button 
+                        onclick="window.history.back()"
+                        class="px-4 py-2 bg-gray-300 text-gray-700 font-semibold rounded-lg shadow-md hover:bg-gray-400 transition duration-150 ease-in-out text-sm w-1/2 sm:w-auto"
+                        title="Quay lại lịch sử trang trước trong WebView (ví dụ: từ trang đăng nhập về trang chính)"
+                    >
+                        Quay lại trang trước
+                    </button>
+                    
+                    <!-- NÚT MỞ LINK TRÊN TRÌNH DUYỆT GỐC -->
+                    <button 
+                        id="open-browser-button"
+                        onclick="openExternalLink('https://oracleapex.com/ords/r/ttdat/test')"
+                        class="px-4 py-2 bg-pink-500 text-white font-semibold rounded-lg shadow-md hover:bg-pink-600 transition duration-150 ease-in-out text-sm w-1/2 sm:w-auto disabled:opacity-50"
+                        title="Mở link ngoài bằng trình duyệt hệ thống (Safari/Chrome)"
+                        disabled
+                    >
+                        Mở Link Ngoài
+                    </button>
+                </div>
             </div>
 
 
@@ -60,9 +73,6 @@
             <div id="apex-iframe-container" class="w-full relative">
                 <!-- 
                     *** RẤT QUAN TRỌNG: THAY THẾ URL DƯỚI ĐÂY BẰNG URL APEX CỦA BẠN ***
-                    Gợi ý: Nếu gặp lỗi "redirected too many times" (chuyển hướng quá nhiều lần), hãy kiểm tra:
-                    1. Ứng dụng APEX có cần đăng nhập không? Nếu có, hãy dùng URL của trang Đăng nhập.
-                    2. Authentication Scheme (Lược đồ Xác thực) đã được đặt thành "No Authentication" (Không xác thực) chưa, nếu bạn muốn ứng dụng công khai.
                 -->
                 <iframe 
                     id="apex-app-frame"
@@ -83,34 +93,41 @@
     </div>
 
     <script>
-        const EXTERNAL_URL = 'https://www.google.com/search?q=Oracle+APEX'; 
+        const EXTERNAL_URL = 'https://docs.oracle.com/en/database/oracle/apex/'; 
         const BROWSER_BUTTON = document.getElementById('open-browser-button');
         const LOADING_MESSAGE = document.getElementById('loading-message');
 
         /**
-         * Hàm này được gọi khi nhấp nút. 
-         * Nó ghi đè URL của cửa sổ cha (window.top), 
-         * buộc WebView phải load URL này.
-         * * Tùy thuộc vào cấu hình của WebView gốc, URL này có thể:
-         * 1. Được WebView tự động mở trong trình duyệt ngoài.
-         * 2. Hoặc cần được WebView lắng nghe và xử lý (Native Bridge).
+         * Hàm này sử dụng Custom URL Scheme ('app-bridge://') để giao tiếp với ứng dụng Native (WebView).
+         * Nó thay đổi location của CỬA SỔ HIỆN TẠI (window.location.href) để kích hoạt Native Bridge.
+         * Ứng dụng Native PHẢI được cấu hình để bắt URL này và mở link bên ngoài.
+         * Kỹ thuật này giữ cho WebView không bị chuyển hướng và lịch sử (history) được bảo toàn.
          * * @param {string} url - Link cần mở
          */
         function openExternalLink(url) {
             // Tạm thời vô hiệu hóa nút để tránh nhấp liên tục
             BROWSER_BUTTON.disabled = true;
 
+            // 1. Tạo Custom Scheme URL
+            // Chúng ta gửi URL thực tế (đã mã hóa) qua một giao thức tùy chỉnh.
+            const encodedUrl = encodeURIComponent(url);
+            const bridgeUrl = `app-bridge://open-external?url=${encodedUrl}`;
+            
             try {
-                // Tùy chọn 1: Thử sử dụng window.open (ít tin cậy trong iframe)
-                // window.open(url, '_system'); 
+                // 2. THAY ĐỔI QUAN TRỌNG: Sử dụng window.location.href thay vì window.top.location.href
+                // Để tránh các giới hạn bảo mật không cần thiết khi cửa sổ đang là cấp cao nhất.
+                window.location.href = bridgeUrl;
+                
+                // 3. Đặt lại nút (vì trang không thực sự load lại, mà WebView sẽ chặn và xử lý)
+                setTimeout(() => {
+                    BROWSER_BUTTON.disabled = false;
+                }, 500); 
 
-                // Tùy chọn 2: Quan trọng nhất - Thay đổi URL của cửa sổ cha (WebView)
-                // Đây là cách phổ biến nhất để thoát khỏi iframe và WebView sẽ xử lý.
-                window.top.location.href = url;
             } catch (e) {
                 // Nếu bị chặn bảo mật (Cross-Origin Frame Access)
-                alert('Không thể mở liên kết. Vui lòng kiểm tra lại cấu hình bảo mật APEX (Embed in Frames) hoặc WebView.');
-                console.error("Lỗi khi cố gắng truy cập window.top:", e);
+                // Lỗi này ít có khả năng xảy ra hơn với window.location.href nếu đang ở top frame.
+                alert('Không thể mở liên kết do giới hạn bảo mật.');
+                console.error("Lỗi khi cố gắng truy cập window.location:", e);
                 BROWSER_BUTTON.disabled = false;
             }
         }
