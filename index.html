@@ -15,10 +15,8 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh; /* Chiếm toàn bộ chiều cao viewport */
-            margin: 0;
-            padding: 20px;
         }
-        /* Style cho thẻ <a> và <button> để trông giống nút */
+        /* Style cho thẻ <a> để trông giống nút */
         .btn {
             display: inline-block;
             text-align: center;
@@ -26,22 +24,10 @@
             transition: all 150ms ease-in-out;
             text-decoration: none; /* Loại bỏ gạch chân của link */
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            border: none;
         }
-
-        /* Thêm style cho nút Quay lại ở đầu trang */
-        .top-back-button-container {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            /* Đảm bảo nút này nằm trên mọi thứ */
-            z-index: 10; 
-        }
-
     </style>
 </head>
 <body class="antialiased">
-
     <!-- NÚT QUAY LẠI TRANG TRƯỚC (Đã di chuyển ra ngoài khối chính) -->
     <div class="top-back-button-container">
         <button 
@@ -55,7 +41,6 @@
             Quay lại
         </button>
     </div>
-
     <div class="max-w-md w-full mx-auto px-4 py-8">
         
         <!-- Container chính -->
@@ -64,7 +49,6 @@
             <!-- Header / Tiêu đề -->
             <header class="mb-6">
                 <h1 class="text-3xl font-extrabold text-indigo-700 mb-2">Khởi động Ứng dụng APEX</h1>
-                <p class="text-sm text-gray-500">Sử dụng nút dưới để khởi động ứng dụng.</p>
             </header>
 
             <!-- NÚT KHỞI ĐỘNG ỨNG DỤNG -->
@@ -79,34 +63,18 @@
                     Mở ứng dụng Oracle APEX
                 </a>
             </div>
-
-            <!-- Thông báo Trạng thái -->
-            <div id="status-message" class="text-sm mt-6 p-3 rounded-lg border border-gray-200 bg-gray-50 text-gray-700">
-                
-            </div>
-
         </main>
-        
-        <!-- Footer / Chân trang -->
-        <footer class="mt-4 text-center text-xs text-gray-400">
-            Trang khởi động đơn giản.
-        </footer>
-
     </div>
 
     <script>
-        // *** Cấu hình URL ***
+        // Đặt URL APEX thực tế vào đây sau khi sao chép mã
         const APEX_APP_URL = 'https://oracleapex.com/ords/r/ttdat/test'; 
-        
-        // URL trả về cố định cho tham số APEX (Trang Launcher)
-        const APEX_RETURN_URL = 'https://zenonmsk.github.io/apexiframe/';
-        
-        // URL chuyển hướng cố định cho nút "Quay lại" trên trang Launcher này
-        const BACK_BUTTON_REDIRECT_URL = 'https://www.saigonco-op.vn/Event/Event?eventId=116';
 
         const DIRECT_LAUNCH_BUTTON = document.getElementById('direct-launch-button');
+        const BRIDGE_LAUNCH_BUTTON = document.getElementById('bridge-launch-button');
         const STATUS_MESSAGE = document.getElementById('status-message');
-
+        // URL chuyển hướng cố định cho nút "Quay lại" trên trang Launcher này
+        const BACK_BUTTON_REDIRECT_URL = 'https://www.saigonco-op.vn/Event/Event?eventId=116';
         // Hàm xử lý nút Quay lại (Chuyển hướng trực tiếp đến URL cố định)
         function goBack() {
             console.log("Navigating directly to fixed redirect URL:", BACK_BUTTON_REDIRECT_URL);
@@ -114,39 +82,23 @@
             window.location.assign(BACK_BUTTON_REDIRECT_URL);
             return false;
         }
-        
-        // Hàm xử lý nút Mở APEX (Sử dụng replace để phá vỡ vòng lặp lịch sử)
-        function launchApex(event) {
-            event.preventDefault(); 
-
-            console.log("Launching APEX. Replacing current URL in history stack.");
-
-            const encodedReturnUrl = encodeURIComponent(APEX_RETURN_URL);
-            const separator = APEX_APP_URL.includes('?') ? '&' : '?';
-            const fullApexUrl = APEX_APP_URL + separator + 'P_RETURN_URL=' + encodedReturnUrl;
-            
-            // *** FIX VÒNG LẶP: Dùng window.location.replace() ***
-            // Thao tác này ghi đè URL APEX lên URL Launcher trong lịch sử.
-            // Khi APEX chuyển hướng ngược lại, nút "Quay lại" sẽ đi thẳng về Trang Gốc.
-            window.location.replace(fullApexUrl); 
-            
-            return false;
-        }
-
         document.addEventListener('DOMContentLoaded', function() {
             
-            // --- Cập nhật thông báo trạng thái ---
-            if (STATUS_MESSAGE) {
-                STATUS_MESSAGE.innerHTML = `Sẵn sàng mở ứng dụng tại: <strong>${APEX_APP_URL}</strong>.
-                                            <br> APEX sẽ trở về: <strong>${APEX_RETURN_URL}</strong>.
-                                            <br> Nút Quay lại dẫn về: <strong>${BACK_BUTTON_REDIRECT_URL}</strong>.`;
+            // --- Xử lý URL và Custom Scheme ---
+            let targetUrl = APEX_APP_URL;
+
+            // Nếu placeholder chưa được thay thế
+           
+                // Cấu hình Nút 1: Mở trực tiếp (Direct Link)
+                DIRECT_LAUNCH_BUTTON.href = targetUrl;
+                
+                // Cập nhật thông báo
+                STATUS_MESSAGE.innerHTML = `Sẵn sàng mở ứng dụng tại: <strong>${targetUrl}</strong>`;
                 STATUS_MESSAGE.classList.remove('text-gray-700', 'bg-gray-50', 'text-red-700', 'bg-red-100', 'border-red-400');
                 STATUS_MESSAGE.classList.add('text-green-700', 'bg-green-100', 'border-green-400');
-            }
+           
         });
     </script>
     
 </body>
 </html>
-
-
