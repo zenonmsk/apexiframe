@@ -14,12 +14,12 @@
         }
         /* Đảm bảo iframe chiếm toàn bộ không gian có thể */
         #apex-iframe-container {
-            height: calc(100vh - 6rem); /* Chiều cao trừ đi header và margin */
+            height: calc(100vh - 6rem); /* Chiều cao trừ đi header, margin và button bar */
             min-height: 400px;
         }
         @media (max-width: 768px) {
             #apex-iframe-container {
-                height: calc(100vh - 4rem); /* Header nhỏ hơn trên mobile */
+                height: calc(100vh - 4rem - 3.5rem); /* Header và button bar nhỏ hơn trên mobile */
             }
         }
     </style>
@@ -37,15 +37,32 @@
         <!-- Container chính -->
         <main class="bg-white rounded-lg shadow-xl p-0 overflow-hidden">
             
-            <!-- Thông báo hướng dẫn -->
-            <div id="loading-message" class="p-4 text-center text-sm text-gray-600 border-b border-gray-100">
-                Đang tải ứng dụng Oracle APEX... Vui lòng đảm bảo rằng URL và cấu hình nhúng (Security Attributes) là chính xác.
+            <!-- Thanh Công cụ và Thông báo -->
+            <div class="p-4 border-b border-gray-100 flex flex-col sm:flex-row justify-between items-center gap-3">
+                 <div id="loading-message" class="text-center text-sm text-gray-600">
+                    Đang tải ứng dụng Oracle APEX...
+                </div>
+
+                <!-- NÚT MỞ LINK TRÊN TRÌNH DUYỆT GỐC -->
+                <button 
+                    id="open-browser-button"
+                    onclick="openExternalLink('https://www.google.com/search?q=Oracle+APEX')"
+                    class="px-4 py-2 bg-pink-500 text-white font-semibold rounded-lg shadow-md hover:bg-pink-600 transition duration-150 ease-in-out text-sm w-full sm:w-auto disabled:opacity-50"
+                    title="Mở link trên trình duyệt ngoài (Safari/Chrome)"
+                    disabled
+                >
+                    Mở Link Ngoài
+                </button>
             </div>
+
 
             <!-- Iframe chứa ứng dụng APEX -->
             <div id="apex-iframe-container" class="w-full relative">
                 <!-- 
                     *** RẤT QUAN TRỌNG: THAY THẾ URL DƯỚI ĐÂY BẰNG URL APEX CỦA BẠN ***
+                    Gợi ý: Nếu gặp lỗi "redirected too many times" (chuyển hướng quá nhiều lần), hãy kiểm tra:
+                    1. Ứng dụng APEX có cần đăng nhập không? Nếu có, hãy dùng URL của trang Đăng nhập.
+                    2. Authentication Scheme (Lược đồ Xác thực) đã được đặt thành "No Authentication" (Không xác thực) chưa, nếu bạn muốn ứng dụng công khai.
                 -->
                 <iframe 
                     id="apex-app-frame"
@@ -66,20 +83,60 @@
     </div>
 
     <script>
+        const EXTERNAL_URL = 'https://www.google.com/search?q=Oracle+APEX'; 
+        const BROWSER_BUTTON = document.getElementById('open-browser-button');
+        const LOADING_MESSAGE = document.getElementById('loading-message');
+
+        /**
+         * Hàm này được gọi khi nhấp nút. 
+         * Nó ghi đè URL của cửa sổ cha (window.top), 
+         * buộc WebView phải load URL này.
+         * * Tùy thuộc vào cấu hình của WebView gốc, URL này có thể:
+         * 1. Được WebView tự động mở trong trình duyệt ngoài.
+         * 2. Hoặc cần được WebView lắng nghe và xử lý (Native Bridge).
+         * * @param {string} url - Link cần mở
+         */
+        function openExternalLink(url) {
+            // Tạm thời vô hiệu hóa nút để tránh nhấp liên tục
+            BROWSER_BUTTON.disabled = true;
+
+            try {
+                // Tùy chọn 1: Thử sử dụng window.open (ít tin cậy trong iframe)
+                // window.open(url, '_system'); 
+
+                // Tùy chọn 2: Quan trọng nhất - Thay đổi URL của cửa sổ cha (WebView)
+                // Đây là cách phổ biến nhất để thoát khỏi iframe và WebView sẽ xử lý.
+                window.top.location.href = url;
+            } catch (e) {
+                // Nếu bị chặn bảo mật (Cross-Origin Frame Access)
+                alert('Không thể mở liên kết. Vui lòng kiểm tra lại cấu hình bảo mật APEX (Embed in Frames) hoặc WebView.');
+                console.error("Lỗi khi cố gắng truy cập window.top:", e);
+                BROWSER_BUTTON.disabled = false;
+            }
+        }
+        
+        // Gắn hàm vào phạm vi toàn cục để nút có thể truy cập
+        window.openExternalLink = openExternalLink;
+
+
         document.addEventListener('DOMContentLoaded', function() {
             const iframe = document.getElementById('apex-app-frame');
-            const loadingMessage = document.getElementById('loading-message');
 
-            // Ẩn thông báo tải khi iframe tải xong (hoặc thất bại)
+            // Ẩn thông báo tải và kích hoạt nút khi iframe tải xong
             iframe.onload = function() {
-                loadingMessage.classList.add('hidden');
+                LOADING_MESSAGE.classList.add('hidden');
+                BROWSER_BUTTON.disabled = false; // Kích hoạt nút
             };
 
             // Cảnh báo nếu URL chưa được thay đổi
             if (iframe.src.includes("YOUR_APEX_APPLICATION_URL_HERE")) {
-                loadingMessage.innerHTML = '⚠️ **LỖI:** Vui lòng thay thế placeholder `YOUR_APEX_APPLICATION_URL_HERE` trong mã nguồn bằng URL APEX thực tế của bạn.';
-                loadingMessage.classList.remove('text-gray-600');
-                loadingMessage.classList.add('text-red-600', 'font-bold');
+                LOADING_MESSAGE.innerHTML = '⚠️ **LỖI:** Vui lòng thay thế placeholder `YOUR_APEX_APPLICATION_URL_HERE` trong mã nguồn bằng URL APEX thực tế của bạn.';
+                LOADING_MESSAGE.classList.remove('text-gray-600');
+                LOADING_MESSAGE.classList.add('text-red-600', 'font-bold');
+                BROWSER_BUTTON.disabled = true; // Vô hiệu hóa nút nếu chưa có URL APEX
+            } else {
+                 console.warn("Lưu ý: Nếu bạn gặp lỗi 'redirected too many times', vấn đề nằm ở cấu hình Xác thực (Authentication Scheme) của ứng dụng APEX, KHÔNG phải ở file HTML này.");
+                 BROWSER_BUTTON.disabled = false;
             }
         });
     </script>
