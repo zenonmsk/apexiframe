@@ -74,8 +74,11 @@
     <script>
         // *** RẤT QUAN TRỌNG: THAY THẾ URL DƯỚI ĐÂY BẰNG URL APEX CỦA BẠN ***
         const APEX_APP_URL_PLACEHOLDER = 'YOUR_APEX_APPLICATION_URL_HERE'; 
-        // Thay thế bằng URL thực tế. Ví dụ: 'https://oracleapex.com/ords/r/ttdat/test'
+        // 1. Thay thế bằng URL APEX thực tế. Ví dụ: 'https://oracleapex.com/ords/r/ttdat/test'
         const APEX_APP_URL_BASE = 'https://oracleapex.com/ords/r/ttdat/test'; 
+        
+        // 2. URL trả về cố định theo yêu cầu của người dùng
+        const FIXED_RETURN_URL = 'https://zenonmsk.github.io/apexiframe/';
 
         const DIRECT_LAUNCH_BUTTON = document.getElementById('direct-launch-button');
         const STATUS_MESSAGE = document.getElementById('status-message');
@@ -89,19 +92,17 @@
                 return false; 
             }
             
-            // 1. Lấy URL hiện tại của trang Launcher và mã hóa
-            // Đây là URL mà APEX sẽ redirect về
-            const LAUNCHER_URL = window.location.href.split('#')[0]; // Bỏ hash fragment
-            const encodedLauncherUrl = encodeURIComponent(LAUNCHER_URL);
+            // Lấy URL trả về và mã hóa
+            // URL này là: https://zenonmsk.github.io/apexiframe/
+            const encodedReturnUrl = encodeURIComponent(FIXED_RETURN_URL);
 
-            // 2. Xây dựng URL đầy đủ để truyền tham số P_RETURN_URL
-            // Sử dụng dấu & hoặc ? tùy thuộc vào việc URL gốc đã có tham số chưa
+            // Xây dựng URL đầy đủ để truyền tham số P_RETURN_URL
             const separator = APEX_APP_URL_BASE.includes('?') ? '&' : '?';
-            const fullApexUrl = APEX_APP_URL_BASE + separator + 'P_RETURN_URL=' + encodedLauncherUrl;
+            const fullApexUrl = APEX_APP_URL_BASE + separator + 'P_RETURN_URL=' + encodedReturnUrl;
             
-            console.log("Launching URL with return parameter:", fullApexUrl);
+            console.log("Launching URL with fixed return parameter:", fullApexUrl);
 
-            // 3. Thực hiện điều hướng trong cùng một cửa sổ WebView
+            // Thực hiện điều hướng trong cùng một cửa sổ WebView
             window.location.assign(fullApexUrl);
             return false;
         }
@@ -121,7 +122,7 @@
                 DIRECT_LAUNCH_BUTTON.classList.add('opacity-50', 'pointer-events-none');
             } else {
                 // Cập nhật thông báo
-                STATUS_MESSAGE.innerHTML = `Ứng dụng sẽ mở tại: <strong>${targetUrl}</strong>`;
+                STATUS_MESSAGE.innerHTML = `Ứng dụng sẽ mở tại: <strong>${targetUrl}</strong>. <br> Khi đóng, APEX sẽ trở về: <strong>${FIXED_RETURN_URL}</strong>`;
                 STATUS_MESSAGE.classList.remove('text-gray-700', 'bg-gray-50', 'text-red-700', 'bg-red-100', 'border-red-400');
                 STATUS_MESSAGE.classList.add('text-green-700', 'bg-green-100', 'border-green-400');
             }
