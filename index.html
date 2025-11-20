@@ -14,8 +14,10 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 100vh; /* Chiếm toàn bộ chiều cao viewport */
+            /* Thay min-height: 100vh bằng 100% để linh hoạt hơn trong iframe */
+            min-height: 100%; 
             margin: 0;
+            padding: 20px; /* Thêm padding nhẹ cho body */
         }
         /* Style cho thẻ <a> để trông giống nút */
         .btn {
@@ -87,13 +89,15 @@
         function launchDirectly(event) {
             event.preventDefault(); 
             
+            // --- DEBUG: Bắt đầu xử lý click ---
+            console.log("Button clicked. Attempting to launch APEX.");
+            
             if (APEX_APP_URL_BASE.includes(APEX_APP_URL_PLACEHOLDER)) {
                 console.error("LỖI CẤU HÌNH: URL APEX chưa được thay thế.");
                 return false; 
             }
             
             // Lấy URL trả về và mã hóa
-            // URL này là: https://zenonmsk.github.io/apexiframe/
             const encodedReturnUrl = encodeURIComponent(FIXED_RETURN_URL);
 
             // Xây dựng URL đầy đủ để truyền tham số P_RETURN_URL
@@ -102,8 +106,15 @@
             
             console.log("Launching URL with fixed return parameter:", fullApexUrl);
 
-            // Thực hiện điều hướng trong cùng một cửa sổ WebView
-            window.location.assign(fullApexUrl);
+            try {
+                // Thực hiện điều hướng trong cùng một cửa sổ WebView (Iframe)
+                window.location.assign(fullApexUrl);
+            } catch (e) {
+                // Xử lý lỗi bảo mật Iframe nếu có
+                console.error("ERROR: Failed to assign new location. Possible iframe security block:", e);
+                STATUS_MESSAGE.innerHTML = `⚠️ LỖI: Không thể chuyển hướng. Lỗi bảo mật Iframe: ${e.message}`;
+            }
+
             return false;
         }
 
