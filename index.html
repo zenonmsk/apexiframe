@@ -67,13 +67,13 @@
             <!-- NÚT KHỞI ĐỘNG ỨNG DỤNG -->
             <div class="flex flex-col gap-4 my-8">
                 
-                <!-- Nút 1: Mở trực tiếp bằng thẻ A (KHÔNG khuyến nghị cho WebView) -->
+                <!-- Nút 1: Mở trực tiếp bằng thẻ A (Sử dụng JS để giữ thanh Nav) -->
                 <a 
                     id="direct-launch-button"
                     href="#" 
-                    target="_blank"
+                    onclick="return launchDirectly(event)"
                     class="btn px-8 py-3 text-base bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition duration-150 ease-in-out w-full disabled:opacity-50"
-                    title="Mở link APEX trực tiếp. Link này có thể ghi đè WebView, nhưng thanh 'Quay lại' sẽ hoạt động."
+                    title="Mở link APEX trực tiếp. Sử dụng JavaScript để cố gắng giữ thanh 'Quay lại'."
                 >
                     1. Mở Trực tiếp (Direct Link)
                 </a>
@@ -113,6 +113,22 @@
         const BRIDGE_LAUNCH_BUTTON = document.getElementById('bridge-launch-button');
         const STATUS_MESSAGE = document.getElementById('status-message');
 
+        // Hàm mới để xử lý việc mở liên kết trực tiếp
+        function launchDirectly(event) {
+            // Ngăn thẻ <a> thực hiện hành động mặc định (ngăn target="_blank")
+            event.preventDefault(); 
+            
+            if (APEX_APP_URL.includes(APEX_APP_URL_PLACEHOLDER)) {
+                return false; // Không làm gì nếu chưa cấu hình
+            }
+
+            // Sử dụng window.location.assign để điều hướng trong cùng một cửa sổ
+            // Điều này đảm bảo rằng lịch sử trình duyệt được ghi lại và 
+            // nút Back (window.history.back()) trên thanh Nav sẽ hoạt động.
+            window.location.assign(APEX_APP_URL);
+            return false;
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
             
             // --- Xử lý URL và Custom Scheme ---
@@ -128,8 +144,8 @@
                 DIRECT_LAUNCH_BUTTON.classList.add('opacity-50', 'pointer-events-none');
                 BRIDGE_LAUNCH_BUTTON.classList.add('opacity-50', 'pointer-events-none');
             } else {
-                // Cấu hình Nút 1: Mở trực tiếp (Direct Link)
-                DIRECT_LAUNCH_BUTTON.href = targetUrl;
+                // Cấu hình Nút 1: Mở trực tiếp (Direct Link) - Chỉ gán href để dễ đọc code
+                DIRECT_LAUNCH_BUTTON.href = "#"; // Đã xử lý bằng JS onclick
 
                 // Cấu hình Nút 2: Mở qua Bridge (Custom Scheme)
                 const encodedUrl = encodeURIComponent(targetUrl);
