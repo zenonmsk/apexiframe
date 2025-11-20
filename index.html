@@ -58,7 +58,7 @@
                     <!-- NÚT MỞ LINK TRÊN TRÌNH DUYỆT GỐC -->
                     <button 
                         id="open-browser-button"
-                        onclick="openExternalLink('https://oracleapex.com/ords/r/ttdat/test')"
+                        onclick="openExternalLink('https://docs.oracle.com/en/database/oracle/apex/')"
                         class="px-4 py-2 bg-pink-500 text-white font-semibold rounded-lg shadow-md hover:bg-pink-600 transition duration-150 ease-in-out text-sm w-1/2 sm:w-auto disabled:opacity-50"
                         title="Mở link ngoài bằng trình duyệt hệ thống (Safari/Chrome)"
                         disabled
@@ -93,41 +93,46 @@
     </div>
 
     <script>
-        const EXTERNAL_URL = 'https://docs.oracle.com/en/database/oracle/apex/'; 
+        const EXTERNAL_URL = 'https://oracleapex.com/ords/r/ttdat/test'; 
         const BROWSER_BUTTON = document.getElementById('open-browser-button');
         const LOADING_MESSAGE = document.getElementById('loading-message');
 
         /**
-         * Hàm này sử dụng Custom URL Scheme ('app-bridge://') để giao tiếp với ứng dụng Native (WebView).
-         * Nó thay đổi location của CỬA SỔ HIỆN TẠI (window.location.href) để kích hoạt Native Bridge.
-         * Ứng dụng Native PHẢI được cấu hình để bắt URL này và mở link bên ngoài.
-         * Kỹ thuật này giữ cho WebView không bị chuyển hướng và lịch sử (history) được bảo toàn.
+         * Hàm này được dùng để mở link ngoài, ưu tiên sử dụng hàm Native (Cầu nối) nếu có.
+         * Nó sẽ kiểm tra sự tồn tại của window.native_openbrowser(url).
+         * Nếu không có, nó sẽ fallback về Custom URL Scheme.
          * * @param {string} url - Link cần mở
          */
         function openExternalLink(url) {
             // Tạm thời vô hiệu hóa nút để tránh nhấp liên tục
             BROWSER_BUTTON.disabled = true;
 
-            // 1. Tạo Custom Scheme URL
-            // Chúng ta gửi URL thực tế (đã mã hóa) qua một giao thức tùy chỉnh.
-            const encodedUrl = encodeURIComponent(url);
-            const bridgeUrl = `app-bridge://open-external?url=${encodedUrl}`;
-            
             try {
-                // 2. THAY ĐỔI QUAN TRỌNG: Sử dụng window.location.href thay vì window.top.location.href
-                // Để tránh các giới hạn bảo mật không cần thiết khi cửa sổ đang là cấp cao nhất.
-                window.location.href = bridgeUrl;
+                // *** BƯỚC 1: ƯU TIÊN SỬ DỤNG HÀM NATIVE (WINDOW.NATIVE_OPENBROWSER) ***
+                // Kiểm tra xem hàm do Native App (WebView) cung cấp có tồn tại hay không.
+                if (typeof window.Native_OpenBrowser === 'function') {
+                    console.log("Sử dụng Native Bridge: window.native_openbrowser()");
+                    window.Native_OpenBrowser(url);
+
+                } else {
+                    // *** BƯỚC 2: FALLBACK VỀ CUSTOM URL SCHEME (Dành cho trường hợp Native Bridge không được cài đặt) ***
+                    console.warn("Native Bridge không tìm thấy. Fallback về Custom URL Scheme.");
+
+                    const encodedUrl = encodeURIComponent(url);
+                    const bridgeUrl = `app-bridge://open-external?url=${encodedUrl}`;
+                    
+                    // Sử dụng window.location.href để kích hoạt WebView
+                    window.location.href = bridgeUrl;
+                }
                 
-                // 3. Đặt lại nút (vì trang không thực sự load lại, mà WebView sẽ chặn và xử lý)
+                // 3. Đặt lại nút (vì trang không thực sự load lại, mà WebView sẽ xử lý)
                 setTimeout(() => {
                     BROWSER_BUTTON.disabled = false;
                 }, 500); 
 
             } catch (e) {
-                // Nếu bị chặn bảo mật (Cross-Origin Frame Access)
-                // Lỗi này ít có khả năng xảy ra hơn với window.location.href nếu đang ở top frame.
-                alert('Không thể mở liên kết do giới hạn bảo mật.');
-                console.error("Lỗi khi cố gắng truy cập window.location:", e);
+                alert('Không thể mở liên kết. Vui lòng kiểm tra lại cấu hình Native Bridge (window.native_openbrowser).');
+                console.error("Lỗi khi cố gắng gọi hàm mở link:", e);
                 BROWSER_BUTTON.disabled = false;
             }
         }
