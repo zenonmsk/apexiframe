@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trình xem Ứng dụng APEX</title>
+    <!-- Tải Tailwind CSS để styling nhanh và responsive -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Thiết lập font Inter -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6; /* Màu nền nhẹ */
+        }
+        /* Đảm bảo iframe chiếm toàn bộ không gian có thể */
+        #apex-iframe-container {
+            height: calc(100vh - 6rem); /* Chiều cao trừ đi header và margin */
+            min-height: 400px;
+        }
+        @media (max-width: 768px) {
+            #apex-iframe-container {
+                height: calc(100vh - 4rem); /* Header nhỏ hơn trên mobile */
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen antialiased">
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        
+        <!-- Header / Tiêu đề -->
+        <header class="mb-4 bg-white p-4 rounded-lg shadow-md flex justify-between items-center">
+            <h1 class="text-2xl font-bold text-indigo-700">Trình xem Ứng dụng APEX</h1>
+            <span class="text-sm text-gray-500 hidden sm:block">Nhúng ứng dụng bằng Iframe</span>
+        </header>
+
+        <!-- Container chính -->
+        <main class="bg-white rounded-lg shadow-xl p-0 overflow-hidden">
+            
+            <!-- Thông báo hướng dẫn -->
+            <div id="loading-message" class="p-4 text-center text-sm text-gray-600 border-b border-gray-100">
+                Đang tải ứng dụng Oracle APEX... Vui lòng đảm bảo rằng URL và cấu hình nhúng (Security Attributes) là chính xác.
+            </div>
+
+            <!-- Iframe chứa ứng dụng APEX -->
+            <div id="apex-iframe-container" class="w-full relative">
+                <!-- 
+                    *** RẤT QUAN TRỌNG: THAY THẾ URL DƯỚI ĐÂY BẰNG URL APEX CỦA BẠN ***
+                -->
+                <iframe 
+                    id="apex-app-frame"
+                    src="https://oracleapex.com/ords/r/ttdat/test" 
+                    frameborder="0" 
+                    class="w-full h-full"
+                    title="Ứng dụng Oracle APEX được nhúng"
+                    sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-pointer-lock"
+                ></iframe>
+            </div>
+
+            <!-- Footer / Chân trang -->
+            <footer class="p-3 text-center text-xs text-gray-400 bg-gray-50 border-t border-gray-100">
+                Sử dụng iframe để tích hợp các ứng dụng web.
+            </footer>
+
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const iframe = document.getElementById('apex-app-frame');
+            const loadingMessage = document.getElementById('loading-message');
+
+            // Ẩn thông báo tải khi iframe tải xong (hoặc thất bại)
+            iframe.onload = function() {
+                loadingMessage.classList.add('hidden');
+            };
+
+            // Cảnh báo nếu URL chưa được thay đổi
+            if (iframe.src.includes("YOUR_APEX_APPLICATION_URL_HERE")) {
+                loadingMessage.innerHTML = '⚠️ **LỖI:** Vui lòng thay thế placeholder `YOUR_APEX_APPLICATION_URL_HERE` trong mã nguồn bằng URL APEX thực tế của bạn.';
+                loadingMessage.classList.remove('text-gray-600');
+                loadingMessage.classList.add('text-red-600', 'font-bold');
+            }
+        });
+    </script>
+    
+</body>
+</html>
