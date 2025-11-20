@@ -15,8 +15,10 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh; /* Chiếm toàn bộ chiều cao viewport */
+            margin: 0;
+            padding: 20px;
         }
-        /* Style cho thẻ <a> để trông giống nút */
+        /* Style cho thẻ <a> và <button> để trông giống nút */
         .btn {
             display: inline-block;
             text-align: center;
@@ -24,7 +26,18 @@
             transition: all 150ms ease-in-out;
             text-decoration: none; /* Loại bỏ gạch chân của link */
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: none;
         }
+
+        /* Thêm style cho nút Quay lại ở đầu trang */
+        .top-back-button-container {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            /* Đảm bảo nút này nằm trên mọi thứ */
+            z-index: 10; 
+        }
+
     </style>
 </head>
 <body class="antialiased">
@@ -86,17 +99,8 @@
             
             // --- Xử lý URL và Custom Scheme ---
             let targetUrl = APEX_APP_URL;
-
-            // Nếu placeholder chưa được thay thế
-           
                 // Cấu hình Nút 1: Mở trực tiếp (Direct Link)
                 DIRECT_LAUNCH_BUTTON.href = targetUrl;
-                
-                // Cập nhật thông báo
-                STATUS_MESSAGE.innerHTML = `Sẵn sàng mở ứng dụng tại: <strong>${targetUrl}</strong>`;
-                STATUS_MESSAGE.classList.remove('text-gray-700', 'bg-gray-50', 'text-red-700', 'bg-red-100', 'border-red-400');
-                STATUS_MESSAGE.classList.add('text-green-700', 'bg-green-100', 'border-green-400');
-           
         });
     </script>
     
