@@ -15,8 +15,10 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh; /* Chiếm toàn bộ chiều cao viewport */
+            margin: 0;
+            padding: 20px;
         }
-        /* Style cho thẻ <a> để trông giống nút */
+        /* Style cho thẻ <a> và <button> để trông giống nút */
         .btn {
             display: inline-block;
             text-align: center;
@@ -24,10 +26,35 @@
             transition: all 150ms ease-in-out;
             text-decoration: none; /* Loại bỏ gạch chân của link */
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: none;
         }
+
+        /* Thêm style cho nút Quay lại ở đầu trang */
+        .top-back-button-container {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            /* Đảm bảo nút này nằm trên mọi thứ */
+            z-index: 10; 
+        }
+
     </style>
 </head>
 <body class="antialiased">
+
+    <!-- NÚT QUAY LẠI TRANG TRƯỚC (Đã di chuyển ra ngoài khối chính) -->
+    <div class="top-back-button-container">
+        <button 
+            onclick="goBack()"
+            class="btn px-4 py-2 text-sm bg-slate-500 text-white font-medium rounded-xl hover:bg-slate-600 transition duration-150 ease-in-out flex items-center shadow-lg"
+            title="Quay lại trang trước đó trong lịch sử trình duyệt."
+        >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Quay lại
+        </button>
+    </div>
 
     <div class="max-w-md w-full mx-auto px-4 py-8">
         
@@ -37,13 +64,11 @@
             <!-- Header / Tiêu đề -->
             <header class="mb-6">
                 <h1 class="text-3xl font-extrabold text-indigo-700 mb-2">Khởi động Ứng dụng APEX</h1>
-                <p class="text-sm text-gray-500">Chọn phương thức mở ứng dụng trên trình duyệt gốc (Chrome/Safari).</p>
+                <p class="text-sm text-gray-500">Sử dụng nút dưới để khởi động ứng dụng.</p>
             </header>
 
             <!-- NÚT KHỞI ĐỘNG ỨNG DỤNG -->
             <div class="flex flex-col gap-4 my-8">
-                
-                <!-- Nút 1: Mở trực tiếp bằng thẻ A (Không qua Custom Scheme) -->
                 <a 
                     id="direct-launch-button"
                     href="#" 
@@ -51,67 +76,50 @@
                     class="btn px-8 py-3 text-base bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition duration-150 ease-in-out w-full disabled:opacity-50"
                     title="Mở link APEX trực tiếp. Yêu cầu cấu hình WebView cho target=_blank"
                 >
-                    1. Mở Trực tiếp (Direct Link)
-                </a>
-
-                <!-- Nút 2: Mở qua Custom URL Scheme (Cầu nối Native) -->
-                <a 
-                    id="bridge-launch-button"
-                    href="#" 
-                    class="btn px-8 py-3 text-base bg-pink-600 text-white font-bold rounded-xl hover:bg-pink-700 transition duration-150 ease-in-out w-full disabled:opacity-50"
-                    title="Mở link APEX qua Custom Scheme (app-bridge://). Cần cấu hình Native App."
-                >
-                    2. Mở qua Bridge (Custom Scheme)
+                    Mở ứng dụng Oracle APEX
                 </a>
             </div>
 
-            <!-- Thông báo Lỗi/Hướng dẫn -->
+            <!-- Thông báo Trạng thái -->
             <div id="status-message" class="text-sm mt-6 p-3 rounded-lg border border-gray-200 bg-gray-50 text-gray-700">
-                Vui lòng cấu hình URL APEX và chọn một nút.
+                
             </div>
 
         </main>
         
         <!-- Footer / Chân trang -->
         <footer class="mt-4 text-center text-xs text-gray-400">
-            Sử dụng các phương thức điều hướng khác nhau.
+            Trang khởi động đơn giản.
         </footer>
 
     </div>
 
     <script>
-        // *** RẤT QUAN TRỌNG: THAY THẾ URL DƯỚI ĐÂY BẰNG URL APEX CỦA BẠN ***
-        const APEX_APP_URL_PLACEHOLDER = 'YOUR_APEX_APPLICATION_URL_HERE'; 
         // Đặt URL APEX thực tế vào đây sau khi sao chép mã
         const APEX_APP_URL = 'https://oracleapex.com/ords/r/ttdat/test'; 
 
         const DIRECT_LAUNCH_BUTTON = document.getElementById('direct-launch-button');
-        const BRIDGE_LAUNCH_BUTTON = document.getElementById('bridge-launch-button');
         const STATUS_MESSAGE = document.getElementById('status-message');
+
+        // Hàm xử lý nút Quay lại
+        function goBack() {
+            console.log("Navigating back using history.back()");
+            // Sử dụng history.back() để quay lại trang trước đó
+            history.back();
+        }
 
         document.addEventListener('DOMContentLoaded', function() {
             
-            // --- Xử lý URL và Custom Scheme ---
+            // --- Xử lý URL ---
             let targetUrl = APEX_APP_URL;
 
-            // Nếu placeholder chưa được thay thế
-            if (targetUrl.includes(APEX_APP_URL_PLACEHOLDER)) {
-                STATUS_MESSAGE.innerHTML = '⚠️ **LỖI CẤU HÌNH:** Vui lòng thay thế placeholder `YOUR_APEX_APPLICATION_URL_HERE` trong mã nguồn bằng URL APEX thực tế của bạn.';
-                STATUS_MESSAGE.classList.remove('text-gray-700', 'bg-gray-50');
-                STATUS_MESSAGE.classList.add('text-red-700', 'bg-red-100', 'border-red-400', 'font-bold');
-                
-                // Vô hiệu hóa cả hai nút
-                DIRECT_LAUNCH_BUTTON.classList.add('opacity-50', 'pointer-events-none');
-                BRIDGE_LAUNCH_BUTTON.classList.add('opacity-50', 'pointer-events-none');
-            } else {
-                // Cấu hình Nút 1: Mở trực tiếp (Direct Link)
+            // Kiểm tra và cấu hình Nút Mở APEX
+            if (DIRECT_LAUNCH_BUTTON) {
                 DIRECT_LAUNCH_BUTTON.href = targetUrl;
+            }
 
-                // Cấu hình Nút 2: Mở qua Bridge (Custom Scheme)
-                const encodedUrl = encodeURIComponent(targetUrl);
-                BRIDGE_LAUNCH_BUTTON.href = `app-bridge://open-external?url=${encodedUrl}`;
-                
-                // Cập nhật thông báo
+            // Cập nhật thông báo trạng thái
+            if (STATUS_MESSAGE) {
                 STATUS_MESSAGE.innerHTML = `Sẵn sàng mở ứng dụng tại: <strong>${targetUrl}</strong>`;
                 STATUS_MESSAGE.classList.remove('text-gray-700', 'bg-gray-50', 'text-red-700', 'bg-red-100', 'border-red-400');
                 STATUS_MESSAGE.classList.add('text-green-700', 'bg-green-100', 'border-green-400');
