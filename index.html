@@ -115,16 +115,17 @@
 
         // Hàm mới để xử lý việc mở liên kết trực tiếp
         function launchDirectly(event) {
-            // Ngăn thẻ <a> thực hiện hành động mặc định (ngăn target="_blank")
+            // Ngăn thẻ <a> thực hiện hành động mặc định
             event.preventDefault(); 
             
             if (APEX_APP_URL.includes(APEX_APP_URL_PLACEHOLDER)) {
-                return false; // Không làm gì nếu chưa cấu hình
+                // Báo lỗi rõ ràng nếu URL chưa được thay thế
+                console.error("LỖI: Nút 1 không hoạt động vì APEX_APP_URL vẫn là placeholder. Vui lòng thay thế 'YOUR_APEX_APPLICATION_URL_HERE'.");
+                return false; 
             }
 
-            // Sử dụng window.location.assign để điều hướng trong cùng một cửa sổ
-            // Điều này đảm bảo rằng lịch sử trình duyệt được ghi lại và 
-            // nút Back (window.history.back()) trên thanh Nav sẽ hoạt động.
+            // Sử dụng window.location.assign để điều hướng và ghi vào lịch sử trình duyệt WebView.
+            // Điều này cho phép nút 'Quay lại' trên thanh Nav cố định hoạt động.
             window.location.assign(APEX_APP_URL);
             return false;
         }
