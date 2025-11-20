@@ -11,10 +11,14 @@
         body {
             font-family: 'Inter', sans-serif;
             background-color: #f3f4f6; /* Màu nền nhẹ */
+            /* Bỏ min-height 100vh để body không làm ảnh hưởng đến thanh fixed */
+            padding-top: 5rem; /* Đảm bảo nội dung không bị thanh nav che */
+        }
+        .main-container {
             display: flex;
             justify-content: center;
-            align-items: center;
-            min-height: 100vh; /* Chiếm toàn bộ chiều cao viewport */
+            align-items: flex-start; /* Căn trên để tránh bị header che */
+            min-height: calc(100vh - 5rem); /* Chiếm phần còn lại của viewport */
         }
         /* Style cho thẻ <a> để trông giống nút */
         .btn {
@@ -29,32 +33,52 @@
 </head>
 <body class="antialiased">
 
-    <div class="max-w-md w-full mx-auto px-4 py-8">
+    <!-- Thanh Điều hướng Cố định (Luôn hiển thị trên cùng) -->
+    <nav class="fixed top-0 left-0 right-0 bg-indigo-700 shadow-xl z-50 p-4">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <!-- Nút Quay lại -->
+            <button 
+                onclick="window.history.back()"
+                class="flex items-center space-x-1 text-white hover:text-indigo-200 transition duration-150 ease-in-out"
+                title="Quay lại trang trước trong lịch sử WebView"
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                <span class="font-semibold hidden sm:inline">Quay lại</span>
+            </button>
+            
+            <h1 class="text-xl font-bold text-white">APEX Launcher</h1>
+            <div class="w-16"></div> <!-- Placeholder để căn giữa tiêu đề -->
+        </div>
+    </nav>
+    
+    <!-- Container chính (Đã dịch chuyển xuống dưới thanh fixed) -->
+    <div class="main-container max-w-md w-full mx-auto px-4 py-8">
         
-        <!-- Container chính -->
-        <main class="bg-white rounded-xl shadow-2xl p-8 text-center">
+        <main class="bg-white rounded-xl shadow-2xl p-8 text-center w-full">
             
             <!-- Header / Tiêu đề -->
             <header class="mb-6">
-                <h1 class="text-3xl font-extrabold text-indigo-700 mb-2">Khởi động Ứng dụng APEX</h1>
-                <p class="text-sm text-gray-500">Chọn phương thức mở ứng dụng trên trình duyệt gốc (Chrome/Safari).</p>
+                <h1 class="text-3xl font-extrabold text-indigo-700 mb-2">Chọn Phương thức Mở</h1>
+                <p class="text-sm text-gray-500">Ứng dụng sẽ mở trong trình duyệt gốc (Chrome/Safari).</p>
             </header>
 
             <!-- NÚT KHỞI ĐỘNG ỨNG DỤNG -->
             <div class="flex flex-col gap-4 my-8">
                 
-                <!-- Nút 1: Mở trực tiếp bằng thẻ A (Không qua Custom Scheme) -->
+                <!-- Nút 1: Mở trực tiếp bằng thẻ A (KHÔNG khuyến nghị cho WebView) -->
                 <a 
                     id="direct-launch-button"
                     href="#" 
                     target="_blank"
                     class="btn px-8 py-3 text-base bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition duration-150 ease-in-out w-full disabled:opacity-50"
-                    title="Mở link APEX trực tiếp. Yêu cầu cấu hình WebView cho target=_blank"
+                    title="Mở link APEX trực tiếp. Link này có thể ghi đè WebView, nhưng thanh 'Quay lại' sẽ hoạt động."
                 >
                     1. Mở Trực tiếp (Direct Link)
                 </a>
 
-                <!-- Nút 2: Mở qua Custom URL Scheme (Cầu nối Native) -->
+                <!-- Nút 2: Mở qua Custom URL Scheme (Cầu nối Native - KHUYẾN NGHỊ) -->
                 <a 
                     id="bridge-launch-button"
                     href="#" 
