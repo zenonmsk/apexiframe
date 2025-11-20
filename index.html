@@ -78,15 +78,6 @@
                 >
                     Mở ứng dụng Oracle APEX
                 </a>
-                <a 
-                    id="direct-launch-button"
-                    href="#" 
-                    target="_blank"
-                    class="btn px-8 py-3 text-base bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition duration-150 ease-in-out w-full disabled:opacity-50"
-                    title="Mở link APEX trực tiếp. Yêu cầu cấu hình WebView cho target=_blank"
-                >
-                    Mở ứng dụng Oracle APEX
-                </a>
             </div>
 
             <!-- Thông báo Trạng thái -->
@@ -106,17 +97,22 @@
     <script>
         // *** Cấu hình URL ***
         const APEX_APP_URL = 'https://oracleapex.com/ords/r/ttdat/test'; 
-        // URL trả về cố định (Trang gốc của Launcher)
-        const FIXED_RETURN_URL = 'https://zenonmsk.github.io/apexiframe/';
+        
+        // URL trả về cố định cho tham số APEX (Trang Launcher)
+        const APEX_RETURN_URL = 'https://zenonmsk.github.io/apexiframe/';
+        
+        // URL chuyển hướng cố định cho nút "Quay lại" trên trang Launcher này
+        const BACK_BUTTON_REDIRECT_URL = 'https://www.saigonco-op.vn/Event/Event?eventId=116';
 
         const DIRECT_LAUNCH_BUTTON = document.getElementById('direct-launch-button');
         const STATUS_MESSAGE = document.getElementById('status-message');
 
-        // Hàm xử lý nút Quay lại
+        // Hàm xử lý nút Quay lại (Chuyển hướng trực tiếp đến URL cố định)
         function goBack() {
-            console.log("Navigating back using history.back(). Should return to the Root Page.");
-            // Sử dụng history.back() để quay lại trang trước đó
-            history.back();
+            console.log("Navigating directly to fixed redirect URL:", BACK_BUTTON_REDIRECT_URL);
+            // Sử dụng window.location.assign() để chuyển hướng trực tiếp đến URL cố định
+            window.location.assign(BACK_BUTTON_REDIRECT_URL);
+            return false;
         }
         
         // Hàm xử lý nút Mở APEX (Sử dụng replace để phá vỡ vòng lặp lịch sử)
@@ -125,7 +121,7 @@
 
             console.log("Launching APEX. Replacing current URL in history stack.");
 
-            const encodedReturnUrl = encodeURIComponent(FIXED_RETURN_URL);
+            const encodedReturnUrl = encodeURIComponent(APEX_RETURN_URL);
             const separator = APEX_APP_URL.includes('?') ? '&' : '?';
             const fullApexUrl = APEX_APP_URL + separator + 'P_RETURN_URL=' + encodedReturnUrl;
             
@@ -141,7 +137,9 @@
             
             // --- Cập nhật thông báo trạng thái ---
             if (STATUS_MESSAGE) {
-                STATUS_MESSAGE.innerHTML = `Sẵn sàng mở ứng dụng tại: <strong>${APEX_APP_URL}</strong>.<br> Quay lại sẽ dẫn về: <strong>${FIXED_RETURN_URL}</strong>`;
+                STATUS_MESSAGE.innerHTML = `Sẵn sàng mở ứng dụng tại: <strong>${APEX_APP_URL}</strong>.
+                                            <br> APEX sẽ trở về: <strong>${APEX_RETURN_URL}</strong>.
+                                            <br> Nút Quay lại dẫn về: <strong>${BACK_BUTTON_REDIRECT_URL}</strong>.`;
                 STATUS_MESSAGE.classList.remove('text-gray-700', 'bg-gray-50', 'text-red-700', 'bg-red-100', 'border-red-400');
                 STATUS_MESSAGE.classList.add('text-green-700', 'bg-green-100', 'border-green-400');
             }
@@ -150,4 +148,3 @@
     
 </body>
 </html>
-
