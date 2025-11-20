@@ -24,6 +24,15 @@
                 height: calc(100vh - 4rem - 3.5rem); 
             }
         }
+        /* Style cho thẻ <a> để trông giống nút */
+        .btn {
+            display: inline-block;
+            text-align: center;
+            line-height: 1.25; /* Thêm line-height cho căn giữa tốt hơn */
+            cursor: pointer;
+            transition: all 150ms ease-in-out;
+            text-decoration: none; /* Loại bỏ gạch chân của link */
+        }
     </style>
 </head>
 <body class="min-h-screen antialiased">
@@ -33,7 +42,8 @@
         <!-- Header / Tiêu đề -->
         <header class="mb-4 bg-white p-4 rounded-lg shadow-md flex justify-between items-center">
             <h1 class="text-2xl font-bold text-indigo-700">Trình xem Ứng dụng APEX</h1>
-            <span class="text-sm text-gray-500 hidden sm:block">Nhúng ứng dụng bằng Iframe</span>
+            <!-- Đã loại bỏ Native Status vì không sử dụng Native Bridge -->
+            <span class="text-sm text-gray-500 hidden sm:block">Sử dụng Custom URL Scheme</span>
         </header>
 
         <!-- Container chính -->
@@ -55,16 +65,19 @@
                         Quay lại trang trước
                     </button>
                     
-                    <!-- NÚT MỞ LINK TRÊN TRÌNH DUYỆT GỐC -->
-                    <button 
+                    <!-- NÚT MỞ LINK TRÊN TRÌNH DUYỆT GỐC (Dùng thẻ A) -->
+                    <!-- 
+                        Thẻ A này chỉ sử dụng thuộc tính href với Custom Scheme (app-bridge://)
+                        và dựa vào Native App (WebView) để chặn và xử lý nó.
+                    -->
+                    <a 
                         id="open-browser-button"
-                        onclick="openExternalLink('https://docs.oracle.com/en/database/oracle/apex/')"
-                        class="px-4 py-2 bg-pink-500 text-white font-semibold rounded-lg shadow-md hover:bg-pink-600 transition duration-150 ease-in-out text-sm w-1/2 sm:w-auto disabled:opacity-50"
+                        href="app-bridge://open-external?url=https%3A%2F%2Fdocs.oracle.com%2Fen%2Fdatabase%2Foracle%2Fapex%2F"
+                        class="btn px-4 py-2 bg-pink-500 text-white font-semibold rounded-lg shadow-md hover:bg-pink-600 transition duration-150 ease-in-out text-sm w-1/2 sm:w-auto"
                         title="Mở link ngoài bằng trình duyệt hệ thống (Safari/Chrome)"
-                        disabled
                     >
                         Mở Link Ngoài
-                    </button>
+                    </a>
                 </div>
             </div>
 
@@ -76,7 +89,7 @@
                 -->
                 <iframe 
                     id="apex-app-frame"
-                    src="https://oracleapex.com/ords/r/ttdat/test" 
+                    src="YOUR_APEX_APPLICATION_URL_HERE" 
                     frameborder="0" 
                     class="w-full h-full"
                     title="Ứng dụng Oracle APEX được nhúng"
@@ -93,72 +106,33 @@
     </div>
 
     <script>
-        const EXTERNAL_URL = 'https://oracleapex.com/ords/r/ttdat/test'; 
+        const EXTERNAL_URL = 'https://docs.oracle.com/en/database/oracle/apex/'; 
         const BROWSER_BUTTON = document.getElementById('open-browser-button');
         const LOADING_MESSAGE = document.getElementById('loading-message');
-
-        /**
-         * Hàm này được dùng để mở link ngoài, ưu tiên sử dụng hàm Native (Cầu nối) nếu có.
-         * Nó sẽ kiểm tra sự tồn tại của window.native_openbrowser(url).
-         * Nếu không có, nó sẽ fallback về Custom URL Scheme.
-         * * @param {string} url - Link cần mở
-         */
-        function openExternalLink(url) {
-            // Tạm thời vô hiệu hóa nút để tránh nhấp liên tục
-            BROWSER_BUTTON.disabled = true;
-
-            try {
-                // *** BƯỚC 1: ƯU TIÊN SỬ DỤNG HÀM NATIVE (WINDOW.NATIVE_OPENBROWSER) ***
-                // Kiểm tra xem hàm do Native App (WebView) cung cấp có tồn tại hay không.
-                if (typeof window.Native_OpenBrowser === 'function') {
-                    console.log("Sử dụng Native Bridge: window.native_openbrowser()");
-                    window.Native_OpenBrowser(url);
-
-                } else {
-                    // *** BƯỚC 2: FALLBACK VỀ CUSTOM URL SCHEME (Dành cho trường hợp Native Bridge không được cài đặt) ***
-                    console.warn("Native Bridge không tìm thấy. Fallback về Custom URL Scheme.");
-
-                    const encodedUrl = encodeURIComponent(url);
-                    const bridgeUrl = `app-bridge://open-external?url=${encodedUrl}`;
-                    
-                    // Sử dụng window.location.href để kích hoạt WebView
-                    window.location.href = bridgeUrl;
-                }
-                
-                // 3. Đặt lại nút (vì trang không thực sự load lại, mà WebView sẽ xử lý)
-                setTimeout(() => {
-                    BROWSER_BUTTON.disabled = false;
-                }, 500); 
-
-            } catch (e) {
-                alert('Không thể mở liên kết. Vui lòng kiểm tra lại cấu hình Native Bridge (window.native_openbrowser).');
-                console.error("Lỗi khi cố gắng gọi hàm mở link:", e);
-                BROWSER_BUTTON.disabled = false;
-            }
-        }
-        
-        // Gắn hàm vào phạm vi toàn cục để nút có thể truy cập
-        window.openExternalLink = openExternalLink;
-
 
         document.addEventListener('DOMContentLoaded', function() {
             const iframe = document.getElementById('apex-app-frame');
 
-            // Ẩn thông báo tải và kích hoạt nút khi iframe tải xong
+            // --- Thiết lập URL cho nút Mở Link Ngoài ---
+            // Đảm bảo URL luôn được mã hóa đúng cách cho thuộc tính href
+            const encodedUrl = encodeURIComponent(EXTERNAL_URL);
+            BROWSER_BUTTON.href = `app-bridge://open-external?url=${encodedUrl}`;
+
+            // Ẩn thông báo tải khi iframe tải xong
             iframe.onload = function() {
                 LOADING_MESSAGE.classList.add('hidden');
-                BROWSER_BUTTON.disabled = false; // Kích hoạt nút
             };
 
             // Cảnh báo nếu URL chưa được thay đổi
-            if (iframe.src.includes("YOUR_APEX_APPLICATION_URL_HERE")) {
+            if (iframe.src.includes("https://oracleapex.com/ords/r/ttdat/test")) {
                 LOADING_MESSAGE.innerHTML = '⚠️ **LỖI:** Vui lòng thay thế placeholder `YOUR_APEX_APPLICATION_URL_HERE` trong mã nguồn bằng URL APEX thực tế của bạn.';
                 LOADING_MESSAGE.classList.remove('text-gray-600');
                 LOADING_MESSAGE.classList.add('text-red-600', 'font-bold');
-                BROWSER_BUTTON.disabled = true; // Vô hiệu hóa nút nếu chưa có URL APEX
+                
+                // Vô hiệu hóa nút Mở Link Ngoài nếu chưa có URL APEX
+                BROWSER_BUTTON.classList.add('opacity-50', 'pointer-events-none');
             } else {
-                 console.warn("Lưu ý: Nếu bạn gặp lỗi 'redirected too many times', vấn đề nằm ở cấu hình Xác thực (Authentication Scheme) của ứng dụng APEX, KHÔNG phải ở file HTML này.");
-                 BROWSER_BUTTON.disabled = false;
+                 console.warn("Lưu ý: Nếu bạn gặp lỗi 'redirected too many times', vấn đề nằm ở cấu hình Xác thực (Authentication Scheme) của ứng dụng APEX.");
             }
         });
     </script>
